@@ -96,7 +96,7 @@ class MCTS_Task(SearchTask):
                                 self.max_length,
                                 self.truncation, self.do_sample, self.max_new_tokens)
         if not response:
-            print('获得下一步失败！\n')
+            print('다음 단계를 가져오지 못했습니다！\n')
             return ''
 
         if len(response) > 5:
@@ -108,25 +108,25 @@ class MCTS_Task(SearchTask):
         p = p.strip()
 
         if self.lang == 'zh':
-            if '下一步:' in p:
+            if '下一步:' in p: #다음단계
                 stp = p.split('下一步:')[1].strip()
                 if len(stp) < 2:
-                    print('输出步骤过短！\n')
+                    print('输出步骤过短！\n') #step 수가 너무 적은데 답을 도출해냄
                     return ''
-                if stp in y:
-                    print('输出步骤重复！\n')
+                if stp in y: # get_next_step(self, y, step_n):의 솔루션 str
+                    print('输出步骤重复！\n') #중복이 있음
                     return ''
 
                 revised_ = '步骤' + str(step_n) + ':' + stp
-                print(f'标准化后新的步骤:{revised_}\n')
+                print(f'标准化后新的步骤:{revised_}\n') # 표준화(일관된 형식으로 정리)한 후, 그에 따라 새롭게 정리된 단계(스텝)
                 return revised_ + '\n'
 
-            elif '步骤' in p and ':' in p:
+            elif '步骤' in p and ':' in p: #步骤 == 다음단계
                 pre_len = len(p.split(':')[0])
                 p_ = p[pre_len:]
                 p_ = p_.split('步骤')[0].strip()
                 if len(p_) < 3:
-                    print('输出步骤过短！\n')
+                    print('step 수가 너무 적은데 답을 도출해냄！\n')
                     return ''
                 if p_[1:] in y:
                     print('输出步骤重复！\n')
@@ -309,9 +309,19 @@ class MCTS_Task(SearchTask):
             print('标准化后的意见: <continue>\n')
             return '<continue>'
 
+        if self.lang == 'ko':  
+            if '해결됨' in p or '이미 해결됨' in p:  
+                if step_n > 1:  
+                    print('이 단계의 문제가 해결되었으므로 더 이상 진행하지 않습니다.\n')  
+                    print('표준화된 의견: <end>\n')  
+                    return '<end>'  
+            print('표준화된 의견: <continue>\n')  
+            return '<continue>'  
+    
+
         else:
             if 'unsolved' in p or step_n <= 1:
-                print('标准化后的意见: <continue>\n')
+                print('표준화된 의견: <continue>\n') 
                 return '<continue>'
             elif 'solved' in p:
                 print('标准化后的意见: <end>\n')
@@ -366,6 +376,21 @@ class MCTS_Task(SearchTask):
             revised_ = p.split('意见:')[1]
             print(f'标准化后的意见:{revised_}\n')
             return revised_
+            
+        if self.lang == 'ko':  
+            if '해결됨' in p or '이미 해결됨' in p:  
+                if step_n > 1:  
+                    print('이 단계의 문제가 해결되었으므로 더 이상 진행하지 않습니다.\n')  
+                    return '<end>'  
+                else:  
+                    return ''  
+
+            if '의견:' not in p:  
+                print('출력 형식이 올바르지 않습니다!\n')  
+                return ''  
+            revised_ = p.split('의견:')[1]  
+            print(f'표준화된 의견: {revised_}\n')  
+            return revised_  
 
         else:
             if 'Problem solved' in p:
@@ -390,7 +415,7 @@ class MCTS_Task(SearchTask):
                 prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
             value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,
                               self.max_length, self.low, self.high)
-            print(f'获得评分:{value}\n')
+            print(f'获得评分:{value}\n') #평가 받기
             self.value_cache.update({y: value})
             return value
 
@@ -417,7 +442,7 @@ class MCTS_Task(SearchTask):
                                     self.truncation, self.do_sample, 128)
 
             if not response:
-                print('获得综述失败！\n')
+                print('获得综述失败！\n') # 요약을 받지 못했습니다
                 return ''
             p = ''
             for _ in response:
@@ -426,12 +451,12 @@ class MCTS_Task(SearchTask):
 
             if self.evaluate:
                 if len(p) < 1:
-                    print('获得综述过短！\n')
+                    print('获得综述过短！\n') #요약된 내용이 너무 짧습니다
                     return ''
 
-                if '综上所述，最终答案是:' not in p:
+                if '综上所述，最终答案是:' not in p: #결론적으로, 최종 답은
                     summ = '综上所述，最终答案是:' + p
-                    print(f'获得综述:{summ}\n')
+                    print(f'获得综述:{summ}\n') #요약된 내용
                     return summ
                 else:
                     summ = '综上所述，最终答案是:' + p.split('综上所述，最终答案是:')[-1]
@@ -465,7 +490,7 @@ class MCTS_Task(SearchTask):
             for _ in response:
                 p = p + _
             summ = p.strip()
-            print(f'获得综述:{summ}\n')
+            print(f'获得综述:{summ}\n') #요약 받기
 
             return summ
 
