@@ -15,6 +15,13 @@ class MCTS_Task(SearchTask):
                  do_sample=True, max_new_tokens=256, use_case_prompt=False, use_reflection='simple', low=0, high=1,
                  evaluate='', sample_value='simple', answer=None, verify_method='string', lang='zh', weighted_verify=False):
         super().__init__(data, propose_method, value_method)
+# class SearchTask(object):
+#     def __init__(self, data, propose_method='glm', value_method='glm'):
+#         super().__init__()
+#         self.question = data
+#         self.propose_method = propose_method
+#         self.value_method = value_method
+#         self.value_cache = {}                
         assert 0 <= low < high, "Inappropriate value range!"
         self.mode = 'mcts'
         self.temperature = temperature
@@ -83,6 +90,7 @@ class MCTS_Task(SearchTask):
 # 당신의 임무는 주어진 이과 문제와 기존의 해결 단계(완전한 정답이 아님)를 바탕으로 올바른 다음 단계를 제시하는 것입니다. 아래는 몇 가지 예제입니다. 학습하세요.
 #few shot 몇개의 예시
 #이와 같은 방식으로 주어진 문제의 기존 해결 단계를 기반으로 올바른 다음 단계를 도출하는 것이 목표입니다.
+# proposal_prompt + (x는 question) + 이전단계:\n + (y가 이전단계) + "결론": 
 
         else:
             if self.propose_method == 'gpt':
@@ -95,6 +103,14 @@ class MCTS_Task(SearchTask):
         response = get_proposal(prompt, self.propose_method, self.temperature, self.max_tokens, self.seed,
                                 self.max_length,
                                 self.truncation, self.do_sample, self.max_new_tokens)
+# def get_proposal(prompt, method='glm', temperature=0.7, max_tokens=2048, seed=170, max_length=2048, truncation=True,
+#                  do_sample=True, max_new_tokens=1024):
+#     response = []
+#     cnt = 2
+#     if method == 'glm':
+#         while not response and cnt:
+#             response = glm(prompt, BASE_MODEL_GLM, temperature=temperature, max_tokens=max_tokens, seed=seed)
+#         return response
         if not response:
             print('다음 단계를 가져오지 못했습니다！\n')
             return ''
@@ -106,10 +122,10 @@ class MCTS_Task(SearchTask):
         for _ in response:
             p = p + _ + ' '
         p = p.strip()
-
+#strip함수 "  Hello, World!  " -> "Hello, World!"
         if self.lang == 'zh':
             if '下一步:' in p: #다음단계
-                stp = p.split('下一步:')[1].strip()
+                stp = p.split('下一步:')[1].strip()  #s_{i+1} 도출
                 if len(stp) < 2:
                     print('输出步骤过短！\n') #step 수가 너무 적은데 답을 도출해냄
                     return ''
@@ -183,6 +199,25 @@ class MCTS_Task(SearchTask):
                 print(f'标准化后新的步骤:{revised_}\n')
                 return revised_ + '\n'
 
+# reflection 프롬프트
+# Your task is to give the correct next step, given a science problem, an existing partial solution (not a complete answer) and some analysis for the next step.
+# Assuming the input is n-steps, then the format of the input is:
+# "Problem: ...
+# Existing Steps:
+# Step 1: ...
+# Step 2: ...
+# ...
+# Step n: ...
+# Analysis: ..."
+
+# where ... denotes omitted input information.
+# If no existing steps are provided, you need to output the first step referring to the given analysis. Otherwise, you need to output the next step (step n+1) that you think is correct, following the ideas of the existing steps and provided analysis.
+# The output format is limited to:
+# "Next step: ..."
+# where ... indicates omitted output information, which is the part you should fill in. Your output should be a complete reasoning step that includes calculations, reasoning, choosing answers, etc.
+# Here is the input, please follow the restricted output format.
+
+# Problem: '''
     def get_next_step_use_reflection(self, y, step_n, reflection):  # 暂不支持 case-prompt
         if self.propose_method == 'gpt' or self.propose_method == 'local':
             propose_prompt = self.zero_single_propose_wrap_use_reflection_gpt(self.question, y, step_n, reflection,
@@ -194,7 +229,7 @@ class MCTS_Task(SearchTask):
                                 self.max_length,
                                 self.truncation, self.do_sample, self.max_new_tokens)
         if not response:
-            print('获得下一步失败！\n')
+            print('다음 단계를 가져오지 못했습니다！\n')
             return ''
 
         if len(response) > 5:
@@ -281,6 +316,10 @@ class MCTS_Task(SearchTask):
 
         if self.propose_method == 'mistral':
             reflection_prompt = self.single_reflection_wrap_simple_mistral(self.question, y, step_n)
+# single_reflection_prompt_simple_mistral = '''
+# Given a science problem and some corresponding steps, if the given steps have already solved the problem and provided the final answer to the question, then you should output: "solved". Otherwise, please output: "unsolved".
+# Following the instruction, output "unsolved" or "solved", with no other information.
+# Problem: '''        
         else:
             reflection_prompt = self.single_reflection_wrap_simple(self.question, y, step_n, self.lang)
         cnt = 3
@@ -411,10 +450,23 @@ class MCTS_Task(SearchTask):
         if self.value_method == 'local':
             if self.lang == 'zh':
                 prompt_answer = '问题:' + self.question + '\n步骤:\n' + '【答案】' + y
+            if self.lang == 'ko':
+                prompt_answer = '문제:' + self.question + '\n답안과정:\n' + y
             else:
                 prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
             value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,
                               self.max_length, self.low, self.high)
+    # method == 'local':
+    #     value = low
+    #     while cnt:
+    #         try:
+    #             value = local_value_model(prompt_answer, max_length=max_length, low=low, high=high)
+    #             break
+    #         except Exception as e:
+    #             print(f'obtain<{method}>score fail!\nError:{e}\n')
+    #             cnt -= 1
+    #     return value
+            
             print(f'获得评分:{value}\n') #평가 받기
             self.value_cache.update({y: value})
             return value
@@ -424,7 +476,7 @@ class MCTS_Task(SearchTask):
             response = get_value(prompt, self.value_method, self.temperature, self.max_tokens, self.seed,
                                  self.max_length, self.low, self.high)
             value = self.value_outputs_unwrap(response, self.low, self.high)
-            print(f'获得评分:{value}\n')
+            print(f'获得评分:{value}\n') #평가받기
             self.value_cache.update({y: value})
             return value
 
