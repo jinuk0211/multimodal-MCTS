@@ -3,7 +3,7 @@ import numpy as np
 
 
 class treeNode(object):
-    def __init__(self, pcd, parent=None, depth=0):
+    def __init__(self, pcd, parent=None, depth=0):  #present children node?
         self.pcd = pcd  # str
         self.y = ''  # str
         self.parent = parent  # treeNode
@@ -34,7 +34,7 @@ class treeNode(object):
 
     def update_y_from_parent(self):
         if self.parent is None:
-            self.y = self.pcd
+            self.y = self.pcd  #지금까지의 솔루션 concat
         else:
             self.y = self.parent.y + self.pcd
 
