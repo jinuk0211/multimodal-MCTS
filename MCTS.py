@@ -130,10 +130,32 @@ def executeRound(root, mcts_task):
 
     print('-' * 40)
     print('selection 단계\n') #选择节点阶段
+# def selectNode(node, mcts_task):
+#     while node.isFullyExpanded:
+# # bestValue = mcts_task.low
+# #     bestNodes = []
+# #     for child in node.children.values():
+# #         nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
+# #             2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF <--UCT
+# #         if nodeValue > bestValue:
+# #             bestValue = nodeValue
+# #             bestNodes = [child]
+# #         elif nodeValue == bestValue:
+# #             bestNodes.append(child)
+# #     return random.choice(bestNodes)             
+#         node = getBestChild(node, mcts_task)
+   
+#     if isTerminal(node, mcts_task):
+#         node.final_ans_flag = 1
+#         return True, node
+#     else:
+#         return False, node    
     flag, node = selectNode(root, mcts_task)
-    if flag:
+    #terminal node임으로 True return
+    if flag: 
         if mcts_task.sample_value != 'full':
             return True, node, root
+        #이경우에는 계속 진행되지만 밑의 대부분 과정 pass
         else:
             node.reflection = '<end>'
 
@@ -171,7 +193,19 @@ def isTerminal(node, mcts_task):
 
 def selectNode(node, mcts_task):
     while node.isFullyExpanded:
+# bestValue = mcts_task.low
+#     bestNodes = []
+#     for child in node.children.values():
+#         nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
+#             2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF <--UCT
+#         if nodeValue > bestValue:
+#             bestValue = nodeValue
+#             bestNodes = [child]
+#         elif nodeValue == bestValue:
+#             bestNodes.append(child)
+#     return random.choice(bestNodes)             
         node = getBestChild(node, mcts_task)
+   
     if isTerminal(node, mcts_task):
         node.final_ans_flag = 1
         return True, node
