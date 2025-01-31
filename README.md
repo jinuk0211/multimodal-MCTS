@@ -22,6 +22,202 @@ python evaluate.py \
   --use_reflection "simple" \
   --branch 3
 ```
+MCTS_task.run()
+```python
+    def run(self):
+        self.clear_cache()
+        self.set_limit_type()
+        node, finish, root = MCTS(self)
+        # vm
+        if self.reward_model_type == 'vm':
+            if self.sample_value != 'full':
+                if self.evaluate == 'scibench':  # SciBench style
+                    solution = node.y
+                    summary = self.get_summary(solution)
+                    final_answer = {'content': self.question, 'solution': solution, 'summary': summary,
+                                    'finish': finish}
+                    if self.sample_value == 'simple':
+                        node.trace_route()
+                        new_value_samples = node.get_new_value_samples()
+                        final_answer.update({'value_samples': new_value_samples})
+                else:  # MATH style
+                    solution = node.y
+                    cnt = 5
+                    summ = ''
+                    while cnt:
+                        if self.verify_method == 'string':
+                            summ = self.get_MATH_summary(solution)
+                        else:
+                            summ = self.get_summary(solution)
+                        if summ:
+                            node.summary = summ
+                            break
+                        else:
+                            cnt -= 1
+
+                    if not summ:
+                        summ = extract_summary_from_solution(solution)
+                        node.summary = summ
+
+                    result = exact_match_score(summ, self.answer)
+                    final_answer = {'content': self.question, 'solution': solution, 'summary': summ, 'finish': finish,
+                                    'accurate': result, 'real_answer': self.answer}
+                return final_answer, root
+            else:
+                if not self.evaluate:  # generate only
+                    assert self.answer is not None, 'Answer is None!\n'
+#----------------------- MCTS_task.verify_end_nodes
+def verify_end_nodes(self, root):
+        if self.reward_model_type == 'vm':
+            end_leaf_nodes = root.get_all_end_root_nodes_vm(self.end_gate)
+        else:
+            end_leaf_nodes = root.get_all_end_root_nodes_prm()
+        flag = False
+        for leaf in end_leaf_nodes:
+            leaf.on_final_route = True
+            cnt = 5
+            summ = ''
+            while cnt:
+                if self.verify_method == 'string':
+                    summ = self.get_MATH_summary(leaf.y)
+                else:
+                    summ = self.get_summary(leaf.y)
+                if summ:
+                    leaf.summary = summ
+                    break
+                else:
+                    cnt -= 1
+            if not summ:
+                summ = extract_summary_from_solution(leaf.y)
+                leaf.summary = summ
+
+            if self.verify_method == 'string':
+                result = exact_match_score(summ, self.answer)
+            else:
+                result = llm_verify(summ, self.answer)
+            if result:
+                if self.reward_model_type == 'vm':
+                    leaf.min_steps_to_correct = 1
+                else:
+                    leaf.he = 1
+                flag = True
+        return flag, end_leaf_nodes
+#--------------------------
+                    flag, end_leaf_nodes = self.verify_end_nodes(root)
+
+                    # extract policy data
+                    new_policy_samples = []
+                    for leaf in end_leaf_nodes:
+                        solution = leaf.y
+                        summ = leaf.summary
+                        correct = True if leaf.min_steps_to_correct == 1 else False
+                        new_policy_sample = {'solution': solution, 'summary': summ, 'correct': correct}
+                        new_policy_samples.append(new_policy_sample)
+
+                    # extract value data
+                    if flag:
+                        new_value_samples = root.get_full_value_samples_vm(end_leaf_nodes)
+                    else:
+                        new_value_samples = []
+                    final_answer = {'content': self.question, 'policy_samples': new_policy_samples,
+                                    'value_samples': new_value_samples, 'real_answer': self.answer}
+                    return final_answer, root
+                else:
+                    assert self.answer is not None, 'Answer is None!\n'
+#--------------------------------------------- MCTS_task.get_final_solution()
+    def get_final_solution(self, root, weighted):  # for evaluation
+        if self.reward_model_type == 'vm':
+            end_leaf_nodes = root.get_all_end_root_nodes_vm(self.end_gate)
+        else:
+            end_leaf_nodes = root.get_all_end_root_nodes_prm()
+
+        if not end_leaf_nodes or not weighted:
+            if not end_leaf_nodes:
+                best_node, best_V = root.getBestV()
+            else:
+                sorted_nodes = sorted(end_leaf_nodes, key=lambda x: x.V, reverse=True)
+                best_node = sorted_nodes[0]
+            solution = best_node.y
+            cnt = 5
+            summ = ''
+            while cnt:
+                if self.verify_method == 'string':
+                    summ = self.get_MATH_summary(solution)
+                else:
+                    summ = self.get_summary(solution)
+                if summ:
+                    best_node.summary = summ
+                    break
+                else:
+                    cnt -= 1
+            if not summ:
+                summ = extract_summary_from_solution(solution)
+                best_node.summary = summ
+            return solution, summ
+
+        else:
+            all_answers = {}  # {answer: [solution, summ, value]}
+            for leaf in end_leaf_nodes:
+                cnt = 5
+                summ = ''
+                while cnt:
+                    if self.verify_method == 'string':
+                        summ = self.get_MATH_summary(leaf.y)
+                    else:
+                        summ = self.get_summary(leaf.y)
+                    if summ:
+                        leaf.summary = summ
+                        break
+                    else:
+                        cnt -= 1
+                if not summ:
+                    summ = extract_summary_from_solution(leaf.y)
+                    leaf.summary = summ
+
+                extracted_answer = extract_answer(summ)
+                if extracted_answer in all_answers.keys():
+                    all_answers[extracted_answer][2] += leaf.V
+                else:
+                    all_answers[extracted_answer] = [leaf.y, summ, leaf.V]
+
+            best_answer = max(all_answers.values(), key=lambda x: x[2])
+            solution = best_answer[0]
+            summ = best_answer[1]
+            return solution, summ
+#------------------------------------------
+                    solution, summ = self.get_final_solution(root, self.weighted_verify)
+                    if not summ:
+                        result = False
+                    else:
+                        result = exact_match_score(summ, self.answer)
+                    final_answer = {'content': self.question, 'solution': solution, 'summary': summ, 'finish': finish,
+                                    'accurate': result, 'real_answer': self.answer}
+                    return final_answer, root
+
+        # prm (only sample generation available now)
+        else:
+            assert self.sample_value, 'Only sampling is supported for prm!\n'
+            assert self.answer is not None, 'Answer is None!\n'
+            flag, end_leaf_nodes = self.verify_end_nodes(root)
+
+            # extract policy data
+            new_policy_samples = []
+            for leaf in end_leaf_nodes:
+                solution = leaf.y
+                summ = leaf.summary
+                correct = True if leaf.he == 1 else False
+                new_policy_sample = {'solution': solution, 'summary': summ, 'correct': correct}
+                new_policy_samples.append(new_policy_sample)
+
+            # extract value data
+            if flag:
+                new_value_samples = root.get_full_value_samples_prm(end_leaf_nodes)
+            else:
+                new_value_samples = []
+            final_answer = {'content': self.question, 'policy_samples': new_policy_samples,
+                            'value_samples': new_value_samples, 'real_answer': self.answer}
+            return final_answer, root
+```
 MCTS함수
 ```python
 def MCTS(mcts_task):
