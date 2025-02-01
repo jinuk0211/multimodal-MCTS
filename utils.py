@@ -10,6 +10,18 @@ from sympy.parsing import sympy_parser
 from get_proposal import *
 def llm_verify(ans, real_ans, judge_model='gpt-4-1106-preview'):
     prompt = '下面将输入两段文字，第一段文字为某道理科题目的一个解答或答案（不一定正确），第二段是这道题目的标准答案。请判断第一段解答得到的答案与标准答案在数学意义上是否一致，并根据判断直接输出‘0’或’1‘，不需要输出任何别的信息。如果答案一致，请输出‘1’；否则，只要答案不匹配，或者第一个文段中没有明确指出答案也没有输出latex表达式，请输出‘0’；如果第一段解答与标准答案之间关系模糊，请输出‘0’。\n'
+# Two pieces of text will be entered below.
+
+# The first piece is a solution or an answer to a science-related problem (such as math or physics). This answer may not necessarily be correct.
+# The second piece is the standard answer to the problem.
+
+# Now, determine whether the answer obtained from the first solution is mathematically equivalent to the standard answer.
+# Based on your judgment, output the result as follows:
+
+# If the two answers are mathematically identical, output '1'.
+# If the answers do not match, or if the first piece does not explicitly state an answer or does not contain a LaTeX expression, output '0'.ㅡ 5
+# If the relationship between the first solution and the standard answer is ambiguous, output '0'.
+# The output must be strictly '0' or '1' without any additional information.
     qry = prompt + '文段1:' + ans + '\n' + '文段2:' + real_ans + '\n输出:'
     lbl = ''
     cnt = 5
@@ -30,6 +42,7 @@ def llm_verify(ans, real_ans, judge_model='gpt-4-1106-preview'):
 
 def extract_summary_from_solution(solution: str):
     pattern = r"\\boxed\{(.*)\}"
+    # r"The result is \boxed{x^2 + 3x - 7}."
     match = re.findall(pattern, solution)
     if match:
         summary = 'The final answer is ' + match[-1]
@@ -97,6 +110,7 @@ def extract_answer(prediction):
         answer = match[0]
     else:
         pattern2 = r"\$([^$]*)\$"
+        # "이 방정식은 $E = mc^2$ 이고, 다른 예제는 $x^2 + y^2 = r^2$ 입니다." ->['E = mc^2', 'x^2 + y^2 = r^2']
         match2 = re.findall(pattern2, prediction)
         if match2:
             # print("match2")
@@ -113,6 +127,7 @@ def extract_answer(prediction):
             else:
                 pattern3 = r'-?[0-9]+\.?[0-9]*'
                 match3 = re.findall(pattern3, prediction)
+                #"숫자 예제: -42, 3.14, 0.5, 그리고 100." -> ['-42', '3.14', '0.5', '100']
                 if match3:
                     # print("match3")
                     answer = match3[-1]
@@ -197,6 +212,7 @@ def normalize_answer(answer: Optional[str]) -> Optional[str]:
     try:
         # Remove enclosing `\text{}`.
         m = re.search("^\\\\text\{(?P<text>.+?)\}$", answer)
+        # \text{}로 감싸진 내용을 찾는 정규식
         if m is not None:
             answer = m.group("text").strip()
         return _strip_string(answer)
