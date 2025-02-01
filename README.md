@@ -284,18 +284,18 @@ def executeRound(root, mcts_task):
     print('selection 단계\n') #选择节点阶段
 # def selectNode(node, mcts_task):
 #     while node.isFullyExpanded:
-# # def get getBestChild(node, mcts_task)
-# # bestValue = mcts_task.low
-# #     bestNodes = []
-# #     for child in node.children.values():
-# #         nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
-# #             2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF <--UCT
-# #         if nodeValue > bestValue:
-# #             bestValue = nodeValue
-# #             bestNodes = [child]
-# #         elif nodeValue == bestValue:
-# #             bestNodes.append(child)
-# #     return random.choice(bestNodes)             
+ def getBestChild(node, mcts_task)
+ bestValue = mcts_task.low
+     bestNodes = []
+     for child in node.children.values():
+         nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
+             2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF <--UCT
+         if nodeValue > bestValue:
+             bestValue = nodeValue
+             bestNodes = [child]
+         elif nodeValue == bestValue:
+             bestNodes.append(child)
+     return random.choice(bestNodes)             
 #         node = getBestChild(node, mcts_task)
    
 #     if isTerminal(node, mcts_task):
