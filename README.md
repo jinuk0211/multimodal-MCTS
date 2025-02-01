@@ -3,7 +3,21 @@
   "content": "Calculate the sum of the first 10 prime numbers.",
   "answer": "129"
 }
-search_task -> MCTS_task -> MCTS_task.run -> MCTS -> MCTS_search 
+search_task -> MCTS_task -> MCTS_task.run -> MCTS -> MCTS_search
+value prompt
+```python
+    @staticmethod
+    def value_prompt_wrap(x: str, y: str) -> str:
+        print('\n', '==============================', 'critic', '==============================', '\n')
+        value_prompt = critic_simplified + x + '\n已有步骤:\n' + y.strip() + '\n输出:'
+        return value_prompt
+
+self_critic_prompt = '''
+Given a science problem and an existing solution, your task is to evaluate the correctness of the solution and provide an evaluation score. 
+Your output should be a decimal ranging from 0 to 1. The more correct the solution is, the higher your evaluation score should be.
+
+Problem:'''
+```
 ```python
 from MCTS.task import *
 question = "Calculate the sum of the first 10 prime numbers."
