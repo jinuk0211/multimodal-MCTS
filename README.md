@@ -374,7 +374,7 @@ def expand(node: treeNode, mcts_task):
 def get_next_steps_expand(node: treeNode, mcts_task):
     next_steps = []
     reflection = node.reflection
-    for i in range(mcts_task.branch):
+    for i in range(mcts_task.branch): #디폴트 값: 3
         proposal = ''
         cnt = 3
         while not proposal and cnt:
