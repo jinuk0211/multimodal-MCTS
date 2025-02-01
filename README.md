@@ -284,6 +284,7 @@ def executeRound(root, mcts_task):
     print('selection 단계\n') #选择节点阶段
 # def selectNode(node, mcts_task):
 #     while node.isFullyExpanded:
+# # def get getBestChild(node, mcts_task)
 # # bestValue = mcts_task.low
 # #     bestNodes = []
 # #     for child in node.children.values():
