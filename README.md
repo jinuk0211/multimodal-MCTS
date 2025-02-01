@@ -499,7 +499,7 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
             self.value_cache.update({y: value})
             return value
 #----------------------------------------------------get step value 함수 설명 끝
-            child.update_value(value)
+            child.update_value(value) #이전 child.y의 value를 get step value 함수로 구함 = value
             if mcts_task.sample_value == 'full':
                 if mcts_task.use_reflection == 'common':
                     child.update_reflection(mcts_task.get_reflection(child.y, child.depth + 1))
