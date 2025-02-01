@@ -354,7 +354,7 @@ def executeRound(root, mcts_task):
         print('모의 탐색 단계\n') #模拟搜索阶段
         if node.reflection == '<end>':
             print('이 단계를 건너 뜁니다。\n')
-#         else:
+        else:
 # def getBestChild(node, mcts_task):
 #     bestValue = mcts_task.low
 #     bestNodes = []
@@ -381,18 +381,19 @@ def executeRound(root, mcts_task):
 #         print('This step has been resolved and does not require simulation.\n')
 #         return node.V
 #     for i in range(mcts_task.roll_forward_steps):
-# # def get_next_steps_roll(y: str, step_n: int, mcts_task):
-# #     next_steps = []
-# #     for i in range(mcts_task.roll_branch):
-# #         proposal = ''
-# #         cnt = 3
-# #         while not proposal and cnt:
-# #             proposal = mcts_task.get_next_step(y, step_n)
-# #             cnt -= 1
-# #         if not proposal:
-# #             continue
-# #         next_steps.append(proposal)
-# #     return next_steps        
+# #------------------- get_next_steps_roll 함수
+ def get_next_steps_roll(y: str, step_n: int, mcts_task):
+     next_steps = []
+     for i in range(mcts_task.roll_branch):
+         proposal = ''
+         cnt = 3
+         while not proposal and cnt:
+             proposal = mcts_task.get_next_step(y, step_n)
+             cnt -= 1
+         if not proposal:
+             continue
+         next_steps.append(proposal)
+     return next_steps        
 #         actions = get_next_steps_roll(strs, cur_step, mcts_task)  # str_list
 #         if not actions:
 #             break
@@ -430,7 +431,7 @@ def executeRound(root, mcts_task):
     
     back_propagate(node)
     return False, node, root
-# ---------------------------------------------            
+# --------------------------------------------- executeround 함수 끝            
             flag, node, root = executeRound(root, mcts_task)
             if flag:
                 print('해결책을 찾았습니다！\n')#已找到解决方案
