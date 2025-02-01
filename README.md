@@ -326,6 +326,7 @@ def expand(node: treeNode, mcts_task):
         else:  # simple이 기본 default
             reflection = mcts_task.get_simple_reflection(node.y, node.depth + 1)
 #--------------------------실제 해결과정 solution을 생성하는 파트 
+#---------------------------------------------------------------
     def get_simple_reflection(self, y, step_n):
         if step_n == 1:
             return '<continue>'
@@ -348,12 +349,14 @@ def expand(node: treeNode, mcts_task):
         if not response:
             print('获得意见失败！\n')
             return '<end>' #밑의 표준화과정 더 있으나 길어서 짤
-#--------------------------------------------
+#----------------------------------------------
+#----------------------------------------------
         node.update_reflection(reflection)
     if node.reflection == '<end>':
         return node
     actions = get_next_steps_expand(node, mcts_task)
-#------------------------------------------- get_next_step함수
+#------------------------------------------- get_next_steps_expand함수
+#------------------------------------------------------------
 def get_next_steps_expand(node: treeNode, mcts_task):
     next_steps = []
     reflection = node.reflection
@@ -365,7 +368,7 @@ def get_next_steps_expand(node: treeNode, mcts_task):
                 proposal = mcts_task.get_next_step_use_reflection(node.y, node.depth + 1, reflection)
             else:
                 proposal = mcts_task.get_next_step(node.y, node.depth + 1)
-#------------------------------------get_next_step설명
+#------------------------------------get_next_step 설명
     # def get_next_step(self, y, step_n):
     #     if self.use_case_prompt:
     #         prompt = self.single_propose_prompt_wrap(self.question, y, step_n)
@@ -392,13 +395,14 @@ def get_next_steps_expand(node: treeNode, mcts_task):
     #             revised_ = '步骤' + str(step_n) + ':' + stp
     #             print(f'标准化后新的步骤:{revised_}\n') # 표준화(일관된 형식으로 정리)한 후, 그에 따라 새롭게 정리된 단계(스텝)
     #             return revised_ + '\n'
-#----------------------------------------------------
+#---------------------------------------------------- get_next_steps 함수끝
             cnt -= 1
         if not proposal:
             continue
         next_steps.append(proposal)
     return next_steps
-#------------------------------------------------- get_next_step함수 설명 끝
+#------------------------------------------------- get_next_steps_expand함수 설명 끝
+#------------------------------------------------
     if not actions:
         node.update_reflection('<end>')
         return node
@@ -422,7 +426,8 @@ def get_next_steps_expand(node: treeNode, mcts_task):
                 prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
             value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,
                               self.max_length, self.low, self.high)
-#------------------------------get value 함수 설명  
+#------------------------------get value 함수 설명
+#----------------------------------------------
 def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, seed=170, max_length=2048, low=0, high=1):
     response = []
     cnt = 2
@@ -459,7 +464,7 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
         print('This method of getting scores is not yet supported!\n')
         return []
 #---------------------------------------------get value함수 설명끝
-            
+#---------------------------------------------
             print(f'获得评分:{value}\n') #평가 받기
             self.value_cache.update({y: value})
             return value
