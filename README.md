@@ -518,6 +518,7 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
         if node.reflection == '<end>':
             print('이 단계를 건너 뜁니다。\n')
         else:
+#----------------------------------- getBestChild 함수
 # def getBestChild(node, mcts_task):
 #     bestValue = mcts_task.low
 #     bestNodes = []
@@ -529,52 +530,56 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
 #             bestNodes = [child]
 #         elif nodeValue == bestValue:
 #             bestNodes.append(child)
-#     return random.choice(bestNodes)            
+#     return random.choice(bestNodes)
+#----------------------------------- getBestChild 함수 설명 끝            
             roll_node = getBestChild(node, mcts_task)
-# def greedyPolicy(node: treeNode, mcts_task):
-#     max_V = mcts_task.low
-#     strs = node.y
-#     cur_step = node.depth + 1
-#     if mcts_task.use_reflection == 'common':
-#         reflection = mcts_task.get_reflection(strs, cur_step)
-#     else:
-#         reflection = mcts_task.get_simple_reflection(strs, cur_step)
-#     node.update_reflection(reflection)
-#     if reflection == '<end>':
-#         print('This step has been resolved and does not require simulation.\n')
-#         return node.V
-#     for i in range(mcts_task.roll_forward_steps):
+#--------------------------------------------greedypolicy 함수 설명
+ def greedyPolicy(node: treeNode, mcts_task):
+     max_V = mcts_task.low
+     strs = node.y
+     cur_step = node.depth + 1
+     if mcts_task.use_reflection == 'common':
+         reflection = mcts_task.get_reflection(strs, cur_step)
+     else:
+         reflection = mcts_task.get_simple_reflection(strs, cur_step)
+     node.update_reflection(reflection)
+     if reflection == '<end>':
+         print('This step has been resolved and does not require simulation.\n')
+         return node.V
+     for i in range(mcts_task.roll_forward_steps):
 # #------------------- get_next_steps_roll 함수
- def get_next_steps_roll(y: str, step_n: int, mcts_task):
-     next_steps = []
-     for i in range(mcts_task.roll_branch):
-         proposal = ''
-         cnt = 3
-         while not proposal and cnt:
-             proposal = mcts_task.get_next_step(y, step_n)
-             cnt -= 1
-         if not proposal:
-             continue
-         next_steps.append(proposal)
-     return next_steps        
-#         actions = get_next_steps_roll(strs, cur_step, mcts_task)  # str_list
-#         if not actions:
-#             break
-#         new_ys = [strs + action for action in actions]
-#         cur_step += 1
-#         values = [mcts_task.get_step_value(new_y) for new_y in new_ys]
-#         idx = numpy.argmax(values)
-#         strs = new_ys[idx]
-#         value = values[idx]
-#         if value > max_V:
-#             max_V = value
-#         if mcts_task.use_reflection == 'common':
-#             cur_ref = mcts_task.get_reflection(strs, cur_step)
-#         else:
-#             cur_ref = mcts_task.get_simple_reflection(strs, cur_step)
-#         if cur_ref == '<end>':
-#             break
-#     return max_V            
+# def get_next_steps_roll(y: str, step_n: int, mcts_task):
+#      next_steps = []
+#      for i in range(mcts_task.roll_branch): #디폴트 roll_branch=1
+#          proposal = ''
+#          cnt = 3
+#          while not proposal and cnt:
+#              proposal = mcts_task.get_next_step(y, step_n) #다음단계 생성하는 함수
+#              cnt -= 1
+#          if not proposal:
+#              continue
+#          next_steps.append(proposal)
+#      return next_steps
+# #------------------------------------
+         actions = get_next_steps_roll(strs, cur_step, mcts_task)  # str_list
+         if not actions:
+             break
+         new_ys = [strs + action for action in actions]
+         cur_step += 1
+         values = [mcts_task.get_step_value(new_y) for new_y in new_ys]
+         idx = numpy.argmax(values)
+         strs = new_ys[idx]
+         value = values[idx]
+         if value > max_V:
+             max_V = value
+         if mcts_task.use_reflection == 'common':
+             cur_ref = mcts_task.get_reflection(strs, cur_step)
+         else:
+             cur_ref = mcts_task.get_simple_reflection(strs, cur_step)
+         if cur_ref == '<end>':
+             break
+     return max_V
+#-------------------------------------------------greedy policy 함수 설명 끝         
             best_V = greedyPolicy(roll_node, mcts_task) if mcts_task.roll_policy == 'greedy' else randomPolicy(roll_node,
                                                                                                                mcts_task)
             roll_node.V = roll_node.V * (1 - mcts_task.alpha) + best_V * mcts_task.alpha
