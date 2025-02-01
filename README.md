@@ -408,6 +408,71 @@ def get_next_steps_expand(node: treeNode, mcts_task):
             node.append_children(action)
             child = node.children[action]
             value = mcts_task.get_step_value(child.y)
+#----------------------------------------------------get step value 함수 설명
+    def get_step_value(self, y):
+        if y in self.value_cache.keys():
+            return self.value_cache[y]
+
+        if self.value_method == 'local':
+            if self.lang == 'zh':
+                prompt_answer = '问题:' + self.question + '\n步骤:\n' + '【答案】' + y
+            if self.lang == 'ko':
+                prompt_answer = '문제:' + self.question + '\n답안과정:\n' + y
+            else:
+                prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
+            value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,
+                              self.max_length, self.low, self.high)
+#------------------------------get value 함수 설명  
+def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, seed=170, max_length=2048, low=0, high=1):
+    response = []
+    cnt = 2
+    if method == 'glm':
+        while not response and cnt:
+            response = glm(prompt_answer, BASE_MODEL_GLM, temperature=temperature, max_tokens=max_tokens, seed=seed)
+            cnt -= 1
+        if not response:
+            print(f'obtain<{method}>score fail!\n')
+            return []
+        return response
+
+    elif method == 'gpt':
+        while not response and cnt:
+            response = gpt(prompt_answer, model=BASE_MODEL_GPT, temperature=temperature, max_tokens=max_tokens)
+            cnt -= 1
+        if not response:
+            print(f'obtain<{method}>score fail!\n')
+            return []
+        return response
+
+    elif method == 'local':
+        value = low
+        while cnt:
+            try:
+                value = local_value_model(prompt_answer, max_length=max_length, low=low, high=high)
+                break
+            except Exception as e:
+                print(f'obtain<{method}>score fail!\nError:{e}\n')
+                cnt -= 1
+        return value
+
+    else:
+        print('This method of getting scores is not yet supported!\n')
+        return []
+#---------------------------------------------get value함수 설명끝
+            
+            print(f'获得评分:{value}\n') #평가 받기
+            self.value_cache.update({y: value})
+            return value
+
+        else:
+            prompt = self.value_prompt_wrap(self.question, y)
+            response = get_value(prompt, self.value_method, self.temperature, self.max_tokens, self.seed,
+                                 self.max_length, self.low, self.high)
+            value = self.value_outputs_unwrap(response, self.low, self.high)
+            print(f'获得评分:{value}\n') #평가받기
+            self.value_cache.update({y: value})
+            return value
+#----------------------------------------------------get step value 함수 설명 끝
             child.update_value(value)
             if mcts_task.sample_value == 'full':
                 if mcts_task.use_reflection == 'common':
