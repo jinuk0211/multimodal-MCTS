@@ -24,6 +24,31 @@ python evaluate.py \
 ```
 MCTS_task.run()
 ```python
+
+class MCTS_Task(SearchTask):
+    def __init__(self, data, propose_method='glm', value_method='glm', branch=3, end_gate=0.9, roll_policy='greedy',
+                 roll_branch=1, roll_forward_steps=3, time_limit=None, iteration_limit=None, exploration_constant=0.7,
+                 alpha=0.5, inf=1.0, temperature=0.7, max_tokens=2048, seed=170, max_length=2048, truncation=True,
+                 do_sample=True, max_new_tokens=256, use_case_prompt=False, use_reflection='simple', low=0, high=1,
+                 evaluate='', sample_value='simple', answer=None, verify_method='string', lang='zh', weighted_verify=False):
+        super().__init__(data, propose_method, value_method)
+# class SearchTask(object):
+#     def __init__(self, data, propose_method='glm', value_method='glm'):
+#         super().__init__()
+#         self.question = data
+#         self.propose_method = propose_method
+#         self.value_method = value_method
+#         self.value_cache = {}                
+        assert 0 <= low < high, "Inappropriate value range!"
+        self.mode = 'mcts' self.temperature = temperature self.max_tokens = max_tokens self.seed = seed
+        self.max_length = max_length self.truncation = truncation self.do_sample = do_sample self.max_new_tokens = max_new_tokens
+        self.branch = branch self.use_case_prompt = use_case_prompt self.low = low self.high = high
+        self.evaluate = evaluate self.end_gate = end_gate self.use_reflection = use_reflection self.roll_policy = roll_policy
+        self.roll_branch = roll_branch self.time_limit = time_limit self.iteration_limit = iteration_limit
+        self.exploration_constant = exploration_constant self.roll_forward_steps = roll_forward_steps self.alpha = alpha
+        self.limit_type = None self.INF = inf self.node_count = 1 self.sample_value = sample_value self.answer = answer
+        self.verify_method = verify_method self.reward_model_type = 'prm' if USE_PRM else 'vm' self.lang = lang
+        self.weighted_verify = weighted_verify
     def run(self):
         self.clear_cache()
         self.set_limit_type()
