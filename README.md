@@ -3,6 +3,7 @@
   "content": "Calculate the sum of the first 10 prime numbers.",
   "answer": "129"
 }
+search_task -> MCTS_task -> MCTS_task.run -> MCTS -> MCTS_search 
 ```python
 from MCTS.task import *
 question = "Calculate the sum of the first 10 prime numbers."
