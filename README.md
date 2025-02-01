@@ -318,36 +318,107 @@ def executeRound(root, mcts_task):
     if node.reflection == '<end>':
         print('이 단계를 건너 뜁니다。\n') #跳过此阶段
     else:
+#--------------------------------- expand 함수 설명
+def expand(node: treeNode, mcts_task):
+    if not node.reflection:
+        if mcts_task.use_reflection == 'common':
+            reflection = mcts_task.get_reflection(node.y, node.depth + 1)
+        else:  # simple이 기본 default
+            reflection = mcts_task.get_simple_reflection(node.y, node.depth + 1)
+#--------------------------실제 해결과정 solution을 생성하는 파트 
+    def get_simple_reflection(self, y, step_n):
+        if step_n == 1:
+            return '<continue>'
+        if self.propose_method in ['local', 'mistral', 'llama'] and self.lang == 'en':
+            if 'answer is' in y or '\\boxed' in y:
+                return '<end>'
+        if self.propose_method == 'mistral':
+            reflection_prompt = self.single_reflection_wrap_simple_mistral(self.question, y, step_n)
+# single_reflection_prompt_simple_mistral = ''' Given a science problem and some corresponding steps, if the given steps have already solved the problem and provided the final answer to the question, then you should output: "solved". Otherwise, please output: "unsolved". Following the instruction, output "unsolved" or "solved", with no other information. Problem: '''        
+        else:
+            reflection_prompt = self.single_reflection_wrap_simple(self.question, y, step_n, self.lang)
+        cnt = 3
+        response = []
+        while not response and cnt:
+            response = get_proposal(reflection_prompt, self.propose_method, self.temperature, self.max_tokens,
+                                    self.seed,
+                                    self.max_length,
+                                    self.truncation, self.do_sample, 128)
+            cnt -= 1
+        if not response:
+            print('获得意见失败！\n')
+            return '<end>' #밑의 표준화과정 더 있으나 길어서 짤
+#--------------------------------------------
+        node.update_reflection(reflection)
+    if node.reflection == '<end>':
+        return node
+    actions = get_next_steps_expand(node, mcts_task)
+#------------------------------------------- get_next_step함수
+def get_next_steps_expand(node: treeNode, mcts_task):
+    next_steps = []
+    reflection = node.reflection
+    for i in range(mcts_task.branch):
+        proposal = ''
+        cnt = 3
+        while not proposal and cnt:
+            if mcts_task.use_reflection == 'common':
+                proposal = mcts_task.get_next_step_use_reflection(node.y, node.depth + 1, reflection)
+            else:
+                proposal = mcts_task.get_next_step(node.y, node.depth + 1)
+#------------------------------------get_next_step설명
+    # def get_next_step(self, y, step_n):
+    #     if self.use_case_prompt:
+    #         prompt = self.single_propose_prompt_wrap(self.question, y, step_n)
+    #     else:
+    #         if self.propose_method == 'gpt':
+    #             prompt = self.zero_single_propose_wrap_gpt(self.question, y, step_n, self.lang)
+    #         elif self.propose_method == 'mistral' or self.propose_method == 'llama':
+    #             prompt = self.zero_single_propose_wrap_mistral(self.question, y, step_n)
+    #         else:
+    #             prompt = self.zero_single_propose_wrap(self.question, y, step_n, self.lang)
 
-# def expand(node: treeNode, mcts_task):
-#     if not node.reflection:
-#         if mcts_task.use_reflection == 'common':
-#             reflection = mcts_task.get_reflection(node.y, node.depth + 1)
-#         else:  # simple
-#             reflection = mcts_task.get_simple_reflection(node.y, node.depth + 1)
-#         node.update_reflection(reflection)
-#     if node.reflection == '<end>':
-#         return node
-#     actions = get_next_steps_expand(node, mcts_task)
-#     if not actions:
-#         node.update_reflection('<end>')
-#         return node
+    #     response = get_proposal(prompt, self.propose_method, self.temperature, self.max_tokens, self.seed,
+    #                             self.max_length,
+    #                             self.truncation, self.do_sample, self.max_new_tokens)
+    #     p = ''
+    #     for _ in response:
+    #         p = p + _ + ' '
+    #     p = p.strip()
+    #     #strip함수 "  Hello, World!  " -> "Hello, World!"
+    #     if self.lang == 'zh':
+    #         if '下一步:' in p: #다음단계
+    #             stp = p.split('下一步:')[1].strip()  #s_{i+1} 도출
 
-#     for action in actions:
-#         if action not in node.children.keys():
-#             node.append_children(action)
-#             child = node.children[action]
-#             value = mcts_task.get_step_value(child.y)
-#             child.update_value(value)
-#             if mcts_task.sample_value == 'full':
-#                 if mcts_task.use_reflection == 'common':
-#                     child.update_reflection(mcts_task.get_reflection(child.y, child.depth + 1))
-#                 else:
-#                     child.update_reflection(mcts_task.get_simple_reflection(child.y, child.depth + 1))
-#             child.visit_sequence = mcts_task.node_count
-#             mcts_task.update_count()
-#     node.isFullyExpanded = True
-#     return node    
+    #             revised_ = '步骤' + str(step_n) + ':' + stp
+    #             print(f'标准化后新的步骤:{revised_}\n') # 표준화(일관된 형식으로 정리)한 후, 그에 따라 새롭게 정리된 단계(스텝)
+    #             return revised_ + '\n'
+#----------------------------------------------------
+            cnt -= 1
+        if not proposal:
+            continue
+        next_steps.append(proposal)
+    return next_steps
+#------------------------------------------------- get_next_step함수 설명 끝
+    if not actions:
+        node.update_reflection('<end>')
+        return node
+
+    for action in actions:
+        if action not in node.children.keys():
+            node.append_children(action)
+            child = node.children[action]
+            value = mcts_task.get_step_value(child.y)
+            child.update_value(value)
+            if mcts_task.sample_value == 'full':
+                if mcts_task.use_reflection == 'common':
+                    child.update_reflection(mcts_task.get_reflection(child.y, child.depth + 1))
+                else:
+                    child.update_reflection(mcts_task.get_simple_reflection(child.y, child.depth + 1))
+            child.visit_sequence = mcts_task.node_count
+            mcts_task.update_count()
+    node.isFullyExpanded = True
+    return node
+#--------------------------------- expand 함수끝
         node = expand(node, mcts_task)
 
     if mcts_task.reward_model_type == 'vm':
