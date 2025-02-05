@@ -201,11 +201,45 @@ class MCTS_Task(SearchTask):
                 if self.evaluate == 'scibench':  # SciBench style
                     solution = node.y
                     summary = self.get_summary(solution)
+#---------------------------
+    def get_summary(self, y):
+        if self.lang == 'zh':
+            if self.evaluate == 'scibench':
+                prompt = self.evaluate_summary_prompt_wrap(self.question, y)
+            elif self.evaluate == 'scieval':
+                prompt = self.general_evaluate_summary_prompt_wrap(self.question, y)
+            else:
+                prompt = self.summary_prompt_wrap(self.question, y)
+
+            response = get_proposal(prompt, self.propose_method, self.temperature, self.max_tokens, self.seed,
+                                    self.max_length,
+                                    self.truncation, self.do_sample, 128)
+#---------------------------------------------------------
                     final_answer = {'content': self.question, 'solution': solution, 'summary': summary,
                                     'finish': finish}
                     if self.sample_value == 'simple':
                         node.trace_route()
                         new_value_samples = node.get_new_value_samples()
+#-------------------------------------------------------
+    def get_new_value_samples(self):  # get value samples from search tree (start from terminal node)
+        if self.depth == 0:
+            return []
+        step_value = 1.0 / self.depth
+        new_samples = []
+        cur_node = self.parent
+        while cur_node is not None:
+            for child in cur_node.children.values():
+                if child.on_final_route:
+                    child_value = step_value * child.depth
+                    new_item = {'steps': child.y, 'value': child_value}
+                    new_samples.append(new_item)
+                else:
+                    child_value = max(step_value * (cur_node.depth - 1), 0)
+                    new_item = {'steps': child.y, 'value': child_value}
+                    new_samples.append(new_item)
+            cur_node = cur_node.parent
+        return new_samples
+#------------------------------------------------
                         final_answer.update({'value_samples': new_value_samples})
                 else:  # MATH style
                     solution = node.y
