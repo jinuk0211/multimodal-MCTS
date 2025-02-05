@@ -717,7 +717,7 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
      if reflection == '<end>':
          print('This step has been resolved and does not require simulation.\n')
          return node.V
-     for i in range(mcts_task.roll_forward_steps):
+     for i in range(mcts_task.roll_forward_steps): # 디폴트 - 3
 # #------------------- get_next_steps_roll 함수
 # def get_next_steps_roll(y: str, step_n: int, mcts_task):
 #      next_steps = []
