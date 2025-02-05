@@ -489,7 +489,7 @@ def executeRound(root, mcts_task):
     flag, node = selectNode(root, mcts_task)
     #terminal node임으로 True return
     if flag: 
-        if mcts_task.sample_value != 'full':
+        if mcts_task.sample_value != 'full': 
             return True, node, root
         #이경우에는 계속 진행되지만 밑의 대부분 과정 pass
         else:
@@ -502,8 +502,8 @@ def executeRound(root, mcts_task):
     else:
 #--------------------------------- expand 함수 설명
 def expand(node: treeNode, mcts_task):
-    if not node.reflection:
-        if mcts_task.use_reflection == 'common':
+    if not node.reflection: #디폴트 - ''
+        if mcts_task.use_reflection == 'common': #디폴트 - simple
             reflection = mcts_task.get_reflection(node.y, node.depth + 1)
         else:  # simple이 기본 default
             reflection = mcts_task.get_simple_reflection(node.y, node.depth + 1)
