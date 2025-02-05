@@ -676,8 +676,8 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
                     child.update_reflection(mcts_task.get_reflection(child.y, child.depth + 1))
                 else:
                     child.update_reflection(mcts_task.get_simple_reflection(child.y, child.depth + 1))
-            child.visit_sequence = mcts_task.node_count
-            mcts_task.update_count()
+            child.visit_sequence = mcts_task.node_count #기본 node count = 1
+            mcts_task.update_count() #def update_count(self): self.node_count += 1
     node.isFullyExpanded = True
     return node
 #--------------------------------- expand 함수끝
