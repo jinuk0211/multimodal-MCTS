@@ -219,6 +219,7 @@ class MCTS_Task(SearchTask):
                                     'finish': finish}
                     if self.sample_value == 'simple':
                         node.trace_route()
+                        new_value_samples = node.get_new_value_samples()
 #---------------------------------------
 #    def trace_route(self):  # trace route from terminal node to root
 #        cur_node = self
