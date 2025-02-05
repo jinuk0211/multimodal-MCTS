@@ -226,7 +226,7 @@ class MCTS_Task(SearchTask):
 #        while cur_node is not None:
 #            cur_node.on_final_route = True
 #            cur_node = cur_node.parent
-#                       new_value_samples = node.get_new_value_samples()
+#                       
 #-------------------------------------------------------
     def get_new_value_samples(self):  # get value samples from search tree (start from terminal node)
         if self.depth == 0:
