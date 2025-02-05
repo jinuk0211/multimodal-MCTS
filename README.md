@@ -550,7 +550,7 @@ def get_next_steps_expand(node: treeNode, mcts_task):
                 proposal = mcts_task.get_next_step_use_reflection(node.y, node.depth + 1, reflection)
             else:
                 proposal = mcts_task.get_next_step(node.y, node.depth + 1)
-#------------------------------------get_next_step 설명
+#==========================================get_next_step 설명
     # def get_next_step(self, y, step_n):
     #     if self.use_case_prompt:
     #         prompt = self.single_propose_prompt_wrap(self.question, y, step_n)
@@ -577,7 +577,8 @@ def get_next_steps_expand(node: treeNode, mcts_task):
     #             revised_ = '步骤' + str(step_n) + ':' + stp
     #             print(f'标准化后新的步骤:{revised_}\n') # 표준화(일관된 형식으로 정리)한 후, 그에 따라 새롭게 정리된 단계(스텝)
     #             return revised_ + '\n'
-#---------------------------------------------------- get_next_steps 함수끝
+#===========================================================get_next_steps 함수끝
+
             cnt -= 1
         if not proposal:
             continue
@@ -593,15 +594,18 @@ def get_next_steps_expand(node: treeNode, mcts_task):
         if action not in node.children.keys():
             node.append_children(action)
 #------------------------------------------------------
+#-------------------------------------
     def append_children(self, new_pcd: str):
         node = treeNode(new_pcd, self, self.depth + 1)
         node.update_y_from_parent() # self.y = self.pcd or self.y = self.parent.y + self.pcd
         self.children.update({new_pcd: node})
         return self
 #------------------------------------------------------
+#-------------------------------------------------
             child = node.children[action]
             value = mcts_task.get_step_value(child.y)
 #----------------------------------------------------get step value 함수 설명
+#-----------------------------------------------------
     def get_step_value(self, y):
         if y in self.value_cache.keys():
             return self.value_cache[y]
@@ -615,8 +619,7 @@ def get_next_steps_expand(node: treeNode, mcts_task):
                 prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
             value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,
                               self.max_length, self.low, self.high)
-#------------------------------get value 함수 설명
-#----------------------------------------------
+#===========================================get value 함수 설명
 def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, seed=170, max_length=2048, low=0, high=1):
     response = []
     cnt = 2
@@ -652,8 +655,7 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
     else:
         print('This method of getting scores is not yet supported!\n')
         return []
-#---------------------------------------------get value함수 설명끝
-#---------------------------------------------
+#==========================================get value함수 설명끝
             print(f'获得评分:{value}\n') #평가 받기
             self.value_cache.update({y: value})
             return value
@@ -667,6 +669,7 @@ def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, see
             self.value_cache.update({y: value})
             return value
 #----------------------------------------------------get step value 함수 설명 끝
+#---------------------------------------------------
             child.update_value(value) #이전 child.y의 value를 get step value 함수로 구함 = value
             if mcts_task.sample_value == 'full':
                 if mcts_task.use_reflection == 'common':
