@@ -280,6 +280,19 @@ def verify_end_nodes(self, root):
             end_leaf_nodes = root.get_all_end_root_nodes_vm(self.end_gate)
         else:
             end_leaf_nodes = root.get_all_end_root_nodes_prm()
+#------------------------------
+    def get_all_end_root_nodes_vm(self, end_gate):
+        end_nodes = []
+        if self.isFullyExpanded:
+            for child in self.children.values():
+                end_nodes.extend(child.get_all_end_root_nodes_vm(end_gate))
+            return end_nodes
+        else:
+            if self.V >= end_gate or self.reflection == '<end>':
+                return [self]
+            else:
+                return []
+#-----------------------------------------
         flag = False
         for leaf in end_leaf_nodes:
             leaf.on_final_route = True
