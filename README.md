@@ -338,6 +338,56 @@ def verify_end_nodes(self, root):
                     # extract value data
                     if flag:
                         new_value_samples = root.get_full_value_samples_vm(end_leaf_nodes)
+#--------------------------------------------
+    def get_full_value_samples_vm(self, end_leaf_nodes):
+        for leaf in end_leaf_nodes:
+            if leaf.min_steps_to_correct > 1:
+                continue
+            else:
+                leaf.he = 1
+                cur_node = leaf.parent
+                while cur_node is not None:
+                    cur_node.min_steps_to_correct = min(
+                        [n.min_steps_to_correct for n in cur_node.children.values()]) + 1
+                    cur_node.he = 1
+                    cur_node = cur_node.parent
+        for leaf in end_leaf_nodes:
+            if leaf.min_steps_to_correct > 1:
+                cur_node = leaf.parent
+                while cur_node is not None and cur_node.min_steps_to_correct == 1024:
+                    cur_node = cur_node.parent
+                if cur_node is None:
+                    continue
+                else:
+                    m = cur_node.min_steps_to_correct
+                    cur_node = leaf
+                    while cur_node.min_steps_to_correct == 1024:
+                        cur_node.min_steps_to_correct = m
+                        cur_node = cur_node.parent
+            else:
+                continue
+        value_samples = self.get_all_value_samples_vm()
+        return value_samples
+
+    def get_all_value_samples_vm(self):
+        full_value_samples = []
+        if self.depth == 0:
+            self.V = 0
+        else:
+            if self.he == 0:
+                r = -1
+            else:
+                r = 1
+            self.V = max(0, (1 - self.parent.V) * r / self.min_steps_to_correct + self.parent.V)
+            full_value_samples.append({'steps': self.y, 'value': self.V})
+        if self.isFullyExpanded:
+            for child in self.children.values():
+                if child.min_steps_to_correct < 1024:
+                    sub_samples = child.get_all_value_samples_vm()
+                    full_value_samples.extend(sub_samples)
+        return full_value_samples
+
+#---------------------------------------------
                     else:
                         new_value_samples = []
                     final_answer = {'content': self.question, 'policy_samples': new_policy_samples,
