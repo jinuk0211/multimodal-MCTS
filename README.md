@@ -656,15 +656,13 @@ def get_next_steps_expand(node: treeNode, mcts_task):
     for action in actions:
         if action not in node.children.keys():
             node.append_children(action)
-#------------------------------------------------------
-#-------------------------------------
+
     def append_children(self, new_pcd: str):
         node = treeNode(new_pcd, self, self.depth + 1)
         node.update_y_from_parent() # self.y = self.pcd or self.y = self.parent.y + self.pcd
         self.children.update({new_pcd: node})
         return self
-#------------------------------------------------------
-#-------------------------------------------------
+
             child = node.children[action]
             value = mcts_task.get_step_value(child.y)
 #----------------------------------------------------get step value 함수 설명
