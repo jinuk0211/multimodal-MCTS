@@ -1,8 +1,25 @@
-# multimodal-MCTS
-{
-  "content": "Calculate the sum of the first 10 prime numbers.",
-  "answer": "129"
-}
+```python
+class treeNode(object):
+    def __init__(self, pcd, parent=None, depth=0):
+        self.pcd = pcd  # str
+        self.y = ''  # str
+        self.parent = parent  # treeNode
+        self.numVisits = 0  # int
+        self.V = 0  # float
+        self.children = {}  # dict{str:treeNode}
+        self.depth = depth  # int
+        self.isFullyExpanded = False  # expanded
+        self.visit_sequence = 0
+        self.final_ans_flag = 0
+        self.reflection = ''
+        self.isTerminal = False  # value acceptable
+        self.on_final_route = False
+        self.min_steps_to_correct = 1024
+        self.summary = ''
+        self.he = 0  # hard estimation
+        self.se = 0  # soft estimation
+#add_children,update_value,get_new_value_sample등의 함수는 적지 않음
+```
 search_task -> MCTS_task -> MCTS_task.run -> MCTS -> MCTS_search
 value prompt
 ```python
