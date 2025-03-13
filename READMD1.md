@@ -582,27 +582,24 @@ def executeRound(root, mcts_task):
 
     print('-' * 40)
     print('selection 단계\n') #选择节点阶段
-# def selectNode(node, mcts_task):
-#     while node.isFullyExpanded:
- def getBestChild(node, mcts_task)
- bestValue = mcts_task.low
-     bestNodes = []
-     for child in node.children.values():
-         nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
-             2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF <--UCT
-         if nodeValue > bestValue:
-             bestValue = nodeValue
-             bestNodes = [child]
-         elif nodeValue == bestValue:
-             bestNodes.append(child)
-     return random.choice(bestNodes)             
-#         node = getBestChild(node, mcts_task)
-   
-#     if isTerminal(node, mcts_task):
-#         node.final_ans_flag = 1
-#         return True, node
-#     else:
-#         return False, node    
+def selectNode(node, mcts_task): 
+    while node.isFullyExpanded:
+        bestValue = mcts_task.low
+        bestNodes = []
+        for child in node.children.values():
+            nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
+                2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF
+            if nodeValue > bestValue:
+                bestValue = nodeValue
+                bestNodes = [child]
+            elif nodeValue == bestValue:
+                bestNodes.append(child)
+        node = random.choice(bestNodes)
+    if isTerminal(node, mcts_task):
+        node.final_ans_flag = 1
+        return True, node
+    else:
+        return False, node #select_node함수 끝
     flag, node = selectNode(root, mcts_task)
     #terminal node임으로 True return
     if flag: 
@@ -624,8 +621,12 @@ def expand(node: treeNode, mcts_task):
             reflection = mcts_task.get_reflection(node.y, node.depth + 1)
         else:  # simple이 기본 default
             reflection = mcts_task.get_simple_reflection(node.y, node.depth + 1)
-#--------------------------실제 해결과정 solution을 생성하는 파트 
-#---------------------------------------------------------------
+        node.update_reflection(reflection)
+    if node.reflection == '<end>':
+        return node
+    actions = get_next_steps_expand(node, mcts_task)
+#------------------------------------------- get_next_steps_expand함수, get_simple_reflection함수
+#------------------------------------------------------------
     def get_simple_reflection(self, y, step_n):
         if step_n == 1:
             return '<continue>'
@@ -648,14 +649,7 @@ def expand(node: treeNode, mcts_task):
         if not response:
             print('获得意见失败！\n')
             return '<end>' #밑의 표준화과정 더 있으나 길어서 짤
-#----------------------------------------------
-#----------------------------------------------
-        node.update_reflection(reflection)
-    if node.reflection == '<end>':
-        return node
-    actions = get_next_steps_expand(node, mcts_task)
-#------------------------------------------- get_next_steps_expand함수
-#------------------------------------------------------------
+
 def get_next_steps_expand(node: treeNode, mcts_task):
     next_steps = []
     reflection = node.reflection
@@ -666,42 +660,35 @@ def get_next_steps_expand(node: treeNode, mcts_task):
             if mcts_task.use_reflection == 'common':
                 proposal = mcts_task.get_next_step_use_reflection(node.y, node.depth + 1, reflection)
             else:
-                proposal = mcts_task.get_next_step(node.y, node.depth + 1)
-#==========================================get_next_step 설명
-    # def get_next_step(self, y, step_n):
-    #     if self.use_case_prompt:
-    #         prompt = self.single_propose_prompt_wrap(self.question, y, step_n)
-    #     else:
-    #         if self.propose_method == 'gpt':
-    #             prompt = self.zero_single_propose_wrap_gpt(self.question, y, step_n, self.lang)
-    #         elif self.propose_method == 'mistral' or self.propose_method == 'llama':
-    #             prompt = self.zero_single_propose_wrap_mistral(self.question, y, step_n)
-    #         else:
-    #             prompt = self.zero_single_propose_wrap(self.question, y, step_n, self.lang)
+                # proposal = mcts_task.get_next_step(node.y, node.depth + 1)
+                if self.use_case_prompt:
+                    prompt = self.single_propose_prompt_wrap(self.question, node.y, node.depth + 1)
+                else:
+                    if self.propose_method == 'gpt':
+                        prompt = self.zero_single_propose_wrap_gpt(self.question, node.y, node.depth + 1, self.lang)
+                    elif self.propose_method == 'mistral' or self.propose_method == 'llama':
+                        prompt = self.zero_single_propose_wrap_mistral(self.question, node.y, node.depth + 1)
+                    else:
+                        prompt = self.zero_single_propose_wrap(self.question, node.y, node.depth + 1, self.lang)
 
-    #     response = get_proposal(prompt, self.propose_method, self.temperature, self.max_tokens, self.seed,
-    #                             self.max_length,
-    #                             self.truncation, self.do_sample, self.max_new_tokens)
-    #     p = ''
-    #     for _ in response:
-    #         p = p + _ + ' '
-    #     p = p.strip()
-    #     #strip함수 "  Hello, World!  " -> "Hello, World!"
-    #     if self.lang == 'zh':
-    #         if '下一步:' in p: #다음단계
-    #             stp = p.split('下一步:')[1].strip()  #s_{i+1} 도출
-
-    #             revised_ = '步骤' + str(step_n) + ':' + stp
-    #             print(f'标准化后新的步骤:{revised_}\n') # 표준화(일관된 형식으로 정리)한 후, 그에 따라 새롭게 정리된 단계(스텝)
-    #             return revised_ + '\n'
-#===========================================================get_next_steps 함수끝
-
+                response = get_proposal(prompt, self.propose_method, self.temperature, self.max_tokens, self.seed,
+                                        self.max_length, self.truncation, self.do_sample, self.max_new_tokens)
+                p = ''
+                for _ in response:
+                    p = p + _ + ' '
+                p = p.strip() #strip함수 "  Hello, World!  " -> "Hello, World!"
+                if self.lang == 'zh':
+                    if '下一步:' in p: #다음단계
+                        stp = p.split('下一步:')[1].strip()  #s_{i+1} 도출
+                        revised_ = '步骤' + str(node.depth + 1) + ':' + stp
+                        print(f'标准化后新的步骤:{revised_}\n') # 표준화(일관된 형식으로 정리)한 후, 그에 따라 새롭게 정리된 단계(스텝)
+                proposal = revised_ + '\n'
             cnt -= 1
         if not proposal:
             continue
         next_steps.append(proposal)
     return next_steps
-#------------------------------------------------- get_next_steps_expand함수 설명 끝
+#------------------------------------------------- 
 #------------------------------------------------
     if not actions:
         node.update_reflection('<end>')
@@ -732,45 +719,43 @@ def append_children(self, new_pcd: str):
                 prompt_answer = '문제:' + self.question + '\n답안과정:\n' + y
             else:
                 prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
-            value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,
-                              self.max_length, self.low, self.high)
-#===========================================get value 함수 설명
-def get_value(prompt_answer, method='glm', temperature=0.7, max_tokens=1000, seed=170, max_length=2048, low=0, high=1):
-    response = []
-    cnt = 2
-    if method == 'glm':
-        while not response and cnt:
-            response = glm(prompt_answer, BASE_MODEL_GLM, temperature=temperature, max_tokens=max_tokens, seed=seed)
-            cnt -= 1
-        if not response:
-            print(f'obtain<{method}>score fail!\n')
-            return []
-        return response
+            #value = get_value(prompt_answer, self.value_method, self.temperature, self.max_tokens, self.seed,self.max_length, self.low, self.high)
+            seed=170
+            response = []
+            cnt = 2
+            if self.value_method == 'glm':
+                while not response and cnt:
+                    response = glm(prompt_answer, BASE_MODEL_GLM, temperature=self.temperature, max_tokens=self.max_tokens, seed=seed)
+                    cnt -= 1
+                if not response:
+                    print(f'obtain<{self.value_method}>score fail!\n')
+                    return []
+                return response
+        
+            elif self.value_method == 'gpt':
+                while not response and cnt:
+                    response = gpt(prompt_answer, model=BASE_MODEL_GPT, temperature=self.temperature, max_tokens=self.max_tokens)
+                    cnt -= 1
+                if not response:
+                    print(f'obtain<{self.value_method}>score fail!\n')
+                    return []
+                return response
+        
+            elif self.value_method == 'local':
+                value = low
+                while cnt:
+                    try:
+                        value = local_value_model(prompt_answer, max_length=self.max_length, low=self.low, high=self.high)
+                        break
+                    except Exception as e:
+                        print(f'obtain<{self.value_method}>score fail!\nError:{e}\n')
+                        cnt -= 1
+            #get_value 함수끝        
+            else:
+                print('This self.value_method of getting scores is not yet supported!\n')
+                return []            
 
-    elif method == 'gpt':
-        while not response and cnt:
-            response = gpt(prompt_answer, model=BASE_MODEL_GPT, temperature=temperature, max_tokens=max_tokens)
-            cnt -= 1
-        if not response:
-            print(f'obtain<{method}>score fail!\n')
-            return []
-        return response
 
-    elif method == 'local':
-        value = low
-        while cnt:
-            try:
-                value = local_value_model(prompt_answer, max_length=max_length, low=low, high=high)
-                break
-            except Exception as e:
-                print(f'obtain<{method}>score fail!\nError:{e}\n')
-                cnt -= 1
-        return value
-
-    else:
-        print('This method of getting scores is not yet supported!\n')
-        return []
-#==========================================get value함수 설명끝
             print(f'获得评分:{value}\n') #평가 받기
             self.value_cache.update({y: value})
             return value
