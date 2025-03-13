@@ -328,7 +328,7 @@ class MCTS_Task(SearchTask):
                     final_answer = {'content': self.question, 'solution': solution, 'summary': summ, 'finish': finish,
                                     'accurate': result, 'real_answer': self.answer}
                 return final_answer, root
-            else:
+            else: #if self.sample_value != 'full':의 else문
                 if not self.evaluate:  # generate only
                     assert self.answer is not None, 'Answer is None!\n'
 #----------------------- MCTS_task.verify_end_nodes
@@ -337,19 +337,19 @@ def verify_end_nodes(self, root):
             end_leaf_nodes = root.get_all_end_root_nodes_vm(self.end_gate)
         else:
             end_leaf_nodes = root.get_all_end_root_nodes_prm()
-#------------------------------
-    def get_all_end_root_nodes_vm(self, end_gate):
-        end_nodes = []
-        if self.isFullyExpanded:
-            for child in self.children.values():
-                end_nodes.extend(child.get_all_end_root_nodes_vm(end_gate))
-            return end_nodes
+
+def get_all_end_root_nodes_vm(self, end_gate):
+    end_nodes = []
+    if self.isFullyExpanded:
+        for child in self.children.values():
+            end_nodes.extend(child.get_all_end_root_nodes_vm(end_gate))
+        return end_nodes
+    else:
+        if self.V >= end_gate or self.reflection == '<end>':
+            return [self]
         else:
-            if self.V >= end_gate or self.reflection == '<end>':
-                return [self]
-            else:
-                return []
-#-----------------------------------------
+            return [] #get_all_end_root_nodes_vm 끝
+
         flag = False
         for leaf in end_leaf_nodes:
             leaf.on_final_route = True
@@ -381,7 +381,7 @@ def verify_end_nodes(self, root):
                 flag = True
         return flag, end_leaf_nodes
 #--------------------------verify_end_nodes 끝
-                    flag, end_leaf_nodes = self.verify_end_nodes(root)
+                    flag, end_leaf_nodes = self.verify_end_nodes(root) #if not self.evaluate 상황
 
                     # extract policy data
                     new_policy_samples = []
@@ -445,12 +445,12 @@ def verify_end_nodes(self, root):
         return full_value_samples
 
 #---------------------------------------------
-                    else:
+                    else: #if not self.evaluate안의 if flag의 else문
                         new_value_samples = []
                     final_answer = {'content': self.question, 'policy_samples': new_policy_samples,
                                     'value_samples': new_value_samples, 'real_answer': self.answer}
                     return final_answer, root
-                else:
+                else: #if not self.evaluate의 else문
                     assert self.answer is not None, 'Answer is None!\n'
                     #MCTS_task.get_final_solution 함수
                     #solution, summ = self.get_final_solution(root, self.weighted_verify)
@@ -520,7 +520,7 @@ def verify_end_nodes(self, root):
                     return final_answer, root
 
         # prm (only sample generation available now)
-        else:
+        else: #if self.reward_model_type == 'vm':의 else문
             assert self.sample_value, 'Only sampling is supported for prm!\n'
             assert self.answer is not None, 'Answer is None!\n'
             flag, end_leaf_nodes = self.verify_end_nodes(root)
