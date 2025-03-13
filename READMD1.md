@@ -210,14 +210,7 @@ class MCTS_Task(SearchTask):
                  alpha=0.5, inf=1.0, temperature=0.7, max_tokens=2048, seed=170, max_length=2048, truncation=True,
                  do_sample=True, max_new_tokens=256, use_case_prompt=False, use_reflection='simple', low=0, high=1,
                  evaluate='', sample_value='simple', answer=None, verify_method='string', lang='zh', weighted_verify=False):
-        super().__init__(data, propose_method, value_method)
-# class SearchTask(object):
-#     def __init__(self, data, propose_method='glm', value_method='glm'):
-#         super().__init__()
-#         self.question = data
-#         self.propose_method = propose_method
-#         self.value_method = value_method
-#         self.value_cache = {}                
+        super().__init__(data, propose_method, value_method)            
         assert 0 <= low < high, "Inappropriate value range!"
         self.mode = 'mcts' self.temperature = temperature self.max_tokens = max_tokens self.seed = seed
         self.max_length = max_length self.truncation = truncation self.do_sample = do_sample self.max_new_tokens = max_new_tokens
