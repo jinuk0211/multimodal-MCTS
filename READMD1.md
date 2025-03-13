@@ -788,22 +788,18 @@ def append_children(self, new_pcd: str):
         print('모의 탐색 단계\n') #模拟搜索阶段
         if node.reflection == '<end>':
             print('이 단계를 건너 뜁니다。\n')
-        else:
-#----------------------------------- getBestChild 함수
-# def getBestChild(node, mcts_task):
-#     bestValue = mcts_task.low
-#     bestNodes = []
-#     for child in node.children.values():
-#         nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
-#             2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF
-#         if nodeValue > bestValue:
-#             bestValue = nodeValue
-#             bestNodes = [child]
-#         elif nodeValue == bestValue:
-#             bestNodes.append(child)
-#     return random.choice(bestNodes)
-#----------------------------------- getBestChild 함수 설명 끝            
-            roll_node = getBestChild(node, mcts_task)
+        else:   #roll_node = getBestChild(node, mcts_task)
+            bestValue = mcts_task.low
+            bestNodes = []
+            for child in node.children.values():
+                nodeValue = child.V + mcts_task.exploration_constant * math.sqrt(
+                    2 * math.log(node.numVisits) / child.numVisits) if child.numVisits > 0 else child.V + mcts_task.INF
+                if nodeValue > bestValue:
+                    bestValue = nodeValue
+                    bestNodes = [child]
+                elif nodeValue == bestValue:
+                    bestNodes.append(child)
+            roll_node = random.choice(bestNodes)
 #--------------------------------------------greedypolicy 함수 설명
  def greedyPolicy(node: treeNode, mcts_task):
      max_V = mcts_task.low
@@ -858,16 +854,17 @@ def append_children(self, new_pcd: str):
 
     print('-' * 40)
     print('역전파 단계\n') #反向传播阶段
-# def back_propagate(node):
-#     while node is not None:
-#         node.numVisits += 1
-#         if node.isFullyExpanded:
-#             child_Vs = [child.V * child.numVisits for child in node.children.values()]
-#             total_num_visits = sum([child.numVisits for child in node.children.values()])
-#             if total_num_visits > 0:
-#                 node.V = sum(child_Vs) / total_num_visits
-#         node = node.parent
-    
+
+def back_propagate(node):
+    while node is not None:
+        node.numVisits += 1
+        if node.isFullyExpanded:
+            child_Vs = [child.V * child.numVisits for child in node.children.values()]
+            total_num_visits = sum([child.numVisits for child in node.children.values()])
+            if total_num_visits > 0:
+                node.V = sum(child_Vs) / total_num_visits
+        node = node.parent #backpropagate 함수끝
+
     back_propagate(node)
     return False, node, root
 # --------------------------------------------- executeround 함수 끝            
