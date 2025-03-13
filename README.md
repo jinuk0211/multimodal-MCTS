@@ -183,7 +183,27 @@ if __name__ == '__main__':
 ```
 MCTS_task.run()
 ```python
+class SearchTask(object):
+    def __init__(self, data, propose_method='glm', value_method='glm'):
+        super().__init__()
+        self.question = data
+        self.propose_method = propose_method
+        self.value_method = value_method
+        self.value_cache = {}
 
+    @staticmethod
+    def summary_prompt_wrap(x: str, y: str = '') -> str:
+        print('\n', '==============================', 'summary', '==============================', '\n')
+        print('summary_prompt: \n', x + '\n已有步骤:\n' + y + '基于以上步骤的综述为:\n')
+        prompt = summary_prompt + x + '\n已有步骤:\n' + y + '\n输出:'
+        return prompt
+    @staticmethod
+    def self_critic_prompt_wrap(x: str, y: str) -> str:
+        print('\n', '==============================', 'self-critic', '==============================', '\n')
+        if not y:
+            y = 'None\n'
+        critic_prompt = self_critic_prompt + x + '\nSolution:\n' + y + '\nScore:'
+        return critic_prompt
 class MCTS_Task(SearchTask):
     def __init__(self, data, propose_method='glm', value_method='glm', branch=3, end_gate=0.9, roll_policy='greedy',
                  roll_branch=1, roll_forward_steps=3, time_limit=None, iteration_limit=None, exploration_constant=0.7,
